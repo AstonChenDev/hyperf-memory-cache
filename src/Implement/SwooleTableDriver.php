@@ -102,4 +102,42 @@ class SwooleTableDriver implements MemoryCacheDriverInterface
     {
         return $this->packer;
     }
+
+    public function hExists(string $key, string $field): ?bool
+    {
+        if (is_null($this->hGet($key, $field))) {
+            return null;
+        }
+        return true;
+    }
+
+    public function hKeys(string $key): ?array
+    {
+       if (is_null($from_cache = $this->hGetAll($key))) {
+           return null;
+       }
+       return array_keys($from_cache);
+    }
+
+    public function hVals(string $key): ?array
+    {
+        if (is_null($from_cache = $this->hGetAll($key))) {
+            return null;
+        }
+        return array_values($from_cache);
+    }
+
+    public function dbCount(): int
+    {
+        return $this->table->count();
+    }
+
+    public function dbData(): array
+    {
+        $data = [];
+        foreach ($this->table as $k => $v) {
+            $data[$k] = $this->packer->unpack($v[self::CACHE_VALUE_COLUMN]);
+        }
+        return $data;
+    }
 }

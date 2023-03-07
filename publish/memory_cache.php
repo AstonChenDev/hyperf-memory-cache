@@ -23,15 +23,15 @@ return [
         'tables' => [
             'cache' => [
                 'enable' => true,//上级缓存开关
-                //内存表最大行数
+                //内存表最大行数 根据机器内存配置 越大越好
                 'table_size' => 1024,
                 'column_value' => [
                     'type' => Table::TYPE_STRING,//内存表缓存值的字段类型
-                    'size' => 1024//缓存值最大存储长度 设置后，设置的字符串不能超过 size 指定的最大长度
+                    'size' => 1024//缓存值最大存储长度，缓存不能超过 size 指定的最大长度 否则自动截断 返回数据不符合预期 根据实际情况配置
                 ],
                 //拦截读取缓存的redis命令
                 'commands' => [
-                    'get', 'hGet', 'hGetAll', 'hMGet', 'hLen' //目前最多支持这么多，可指定拦截命令，留空代表不拦截，
+                    'get', 'hGet', 'hGetAll', 'hMGet', 'hLen','hexists','hkeys','hvals' //目前最多支持这么多，可指定拦截命令，留空代表不拦截，
                 ]
             ],
         ],

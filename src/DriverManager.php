@@ -6,6 +6,7 @@ use Aston\MemoryCache\Contract\MemoryCacheDriverInterface;
 use Aston\MemoryCache\Implement\SwooleTableDriver;
 use Exception;
 use Hyperf\Contract\ConfigInterface;
+use Hyperf\Utils\ApplicationContext;
 
 class DriverManager
 {
@@ -40,5 +41,15 @@ class DriverManager
         $driver = make($driverClass, ['config' => $config]);
 
         return $this->drivers[$name] = $driver;
+    }
+
+    public static function analyze():array
+    {
+        $hit_count =  ApplicationContext::getContainer()->get('hit_counter')->get();
+        $miss_count =  ApplicationContext::getContainer()->get('miss_counter')->get();
+        return [
+            'hit' => $hit_count,
+            'miss' => $miss_count,
+        ];
     }
 }

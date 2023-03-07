@@ -23,7 +23,7 @@ class CacheAspect extends AbstractAspect
     public $classes = [Redis::class];
 
     private const ALLOWED_METHODS = [
-        'get', 'hget', 'hgetall', 'hmget', 'hlen'
+        'get', 'hget', 'hgetall', 'hmget', 'hlen','hexists','hkeys','hvals'
     ];
 
     private static array $custom_methods = [];
@@ -50,6 +50,9 @@ class CacheAspect extends AbstractAspect
 
     public function process(ProceedingJoinPoint $proceedingJoinPoint)
     {
+        if (!self::$custom_methods) {
+            return $proceedingJoinPoint->process();
+        }
         if (count($proceedingJoinPoint->getArguments()) !== 2) {
             return $proceedingJoinPoint->process();
         }
@@ -63,9 +66,11 @@ class CacheAspect extends AbstractAspect
             return $proceedingJoinPoint->process();
         }
         if (($from_cache = $this->$method(...$arguments)) === null) {
+            $this->container->get('miss_counter')->add();
             $this->logger->debug('内存表获取缓存失败， 回源获取: method: ' . $method . '; args: ' . json_encode($arguments));
             return $proceedingJoinPoint->process();
         }
+        $this->container->get('hit_counter')->add();
         return $from_cache;
     }
 

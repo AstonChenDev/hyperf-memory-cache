@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace Aston\MemoryCache;
 
 
+use Aston\MemoryCache\Listener\AppBootingListeners;
+
 class ConfigProvider
 {
     public function __invoke(): array
@@ -31,7 +33,9 @@ class ConfigProvider
             // 默认 Command 的定义，合并到 Hyperf\Contract\ConfigInterface 内，换个方式理解也就是与 config/autoload/commands.php 对应
             'commands' => [],
             // 与 commands 类似
-            'listeners' => [],
+            'listeners' => [
+                AppBootingListeners::class
+            ],
             // 组件默认配置文件，即执行命令后会把 source 的对应的文件复制为 destination 对应的的文件
             'publish' => [
                 [

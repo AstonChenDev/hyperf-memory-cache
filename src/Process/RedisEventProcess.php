@@ -46,7 +46,13 @@ class RedisEventProcess extends AbstractProcess
             "__keyevent@{$db}__:expired",
             "__keyevent@{$db}__:hdel",
             "__keyevent@{$db}__:hset",
+            "__keyevent@{$db}__:hincrby",
+            "__keyevent@{$db}__:hincrbyfloat",
             "__keyevent@{$db}__:set",
+            "__keyevent@{$db}__:setrange",
+            "__keyevent@{$db}__:append",
+            "__keyevent@{$db}__:incrby",
+            "__keyevent@{$db}__:incrbyfloat",
             "__keyevent@{$db}__:rename_from",
             "__keyevent@{$db}__:rename_to",
         ], [$this, 'onPublish']);
@@ -59,6 +65,9 @@ class RedisEventProcess extends AbstractProcess
         $this->logger->debug("触发redis键事件, event: $event, , method: $method, key: $key");
         switch (Str::lower($method)) {
             case 'set':
+            case 'append':
+            case 'incrby':
+            case 'incrbyfloat':
                 $latest = $this->redis->rawCommand('get', $key);
                 if (!$latest) {
                     return;
@@ -68,6 +77,8 @@ class RedisEventProcess extends AbstractProcess
                 break;
             case 'hset':
             case 'hdel':
+            case 'hincrby':
+            case 'hincrbyfloat':
                 $latest = $this->redis->rawCommand('hGetAll', $key);
                 if (!$latest) {
                     return;
