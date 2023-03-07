@@ -7,6 +7,7 @@
             "Aston\\MemoryCache\\": "src/"
         }
     },
+    "description": "基于 Swoole Hyperf 框架，将 SwooleTable 作为 Redis 的上级缓存",
     "authors": [
         {
             "name": "ChenPeng",
