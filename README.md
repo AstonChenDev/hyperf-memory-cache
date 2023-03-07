@@ -25,6 +25,7 @@ php bin/hyperf.php vendor:publish aston/memory-cache
         'packer' => PhpSerializerPacker::class,
         'tables' => [
             'cache' => [
+                 'enable' => true,//上级缓存开关, false 则完全不走上级缓存
                 //内存表最大行数
                 'table_size' => 1024,
                 'column_value' => [
