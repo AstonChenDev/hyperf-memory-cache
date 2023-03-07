@@ -4,6 +4,7 @@ namespace Aston\MemoryCache\Implement;
 
 use Aston\MemoryCache\Contract\MemoryCacheDriverInterface;
 use Hyperf\Contract\PackerInterface;
+use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Utils\Packer\PhpSerializerPacker;
 use Psr\Container\ContainerInterface;
 use Swoole\Table;
@@ -16,8 +17,11 @@ class SwooleTableDriver implements MemoryCacheDriverInterface
 
     const CACHE_VALUE_COLUMN = 'v';
 
+    private ContainerInterface $container;
+
     public function __construct(ContainerInterface $container, array $config)
     {
+        $this->container = $container;
         $this->packer = $container->get($config['packer'] ?? PhpSerializerPacker::class);
         $this->table = new Table($config['tables']['cache']['table_size'] ?? 1024);
         $this->table->column(
@@ -39,7 +43,12 @@ class SwooleTableDriver implements MemoryCacheDriverInterface
 
     public function set(string $key, string $value): bool
     {
-        return $this->table->set($key, [self::CACHE_VALUE_COLUMN => $this->packer->pack($value)]);
+        try {
+            return $this->table->set($key, [self::CACHE_VALUE_COLUMN => $this->packer->pack($value)]);
+        } catch (\Throwable $throwable) {
+            $this->container->get(StdoutLoggerInterface::class)->warning($throwable->getMessage());
+            return false;
+        }
     }
 
     public function del(...$keys): int
