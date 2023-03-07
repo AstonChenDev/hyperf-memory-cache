@@ -85,4 +85,9 @@ class RedisEventProcess extends AbstractProcess
                 break;
         }
     }
+
+    public function isEnable($server): bool
+    {
+        return (bool)$this->container->get(ConfigInterface::class)->get('memory_cache.default.tables.cache.enable', true);
+    }
 }

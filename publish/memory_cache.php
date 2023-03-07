@@ -22,6 +22,7 @@ return [
         'packer' => PhpSerializerPacker::class,
         'tables' => [
             'cache' => [
+                'enable' => true,//上级缓存开关
                 //内存表最大行数
                 'table_size' => 1024,
                 'column_value' => [

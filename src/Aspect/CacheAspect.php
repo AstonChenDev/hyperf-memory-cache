@@ -43,6 +43,9 @@ class CacheAspect extends AbstractAspect
         $this->config = $config;
         $custom_commands = $this->config->get("memory_cache.default.tables.cache.commands", []);
         $this->setCustomCommands($custom_commands);
+        if (!$this->checkEnable()) {
+            self::$custom_methods = [];
+        }
     }
 
     public function process(ProceedingJoinPoint $proceedingJoinPoint)
@@ -79,5 +82,10 @@ class CacheAspect extends AbstractAspect
             $custom_command = Str::lower($custom_command);
         }
         self::$custom_methods = array_intersect(self::ALLOWED_METHODS, $custom_commands);
+    }
+
+    private function checkEnable(): bool
+    {
+        return (bool)$this->config->get('memory_cache.default.tables.cache.enable', true);
     }
 }
