@@ -1,0 +1,33 @@
+{
+    "name": "aston/memory-cache",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Aston\\MemoryCache\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ChenPeng",
+            "email": "chenpeng@kiwiing.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "hyperf/process": "^2.2",
+        "psr/container": "^1.0|^2.0",
+        "hyperf/utils": "~2.2.0",
+        "hyperf/redis": "2.2.*",
+        "hyperf/di": "2.2.*",
+        "hyperf/config": "2.2.*",
+        "ext-redis": "*",
+        "swoft/swoole-ide-helper": "^4.2",
+        "psr/log": "*"
+    },
+    "extra": {
+        "hyperf": {
+            "config": "Aston\\MemoryCache\\ConfigProvider"
+        }
+    }
+}
