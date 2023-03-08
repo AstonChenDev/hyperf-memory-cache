@@ -53,7 +53,7 @@ class SwooleTableDriver implements MemoryCacheDriverInterface
         try {
             $pack_data = $this->packer->pack($value);
             if (strlen($pack_data) > $this->value_size) {
-                throw new \Exception('Method Swoole\Table::set() value is too long');
+                throw new \Exception("Swoole\Table::set(): failed to set($key) with $value, the value length is too long");
             }
             return $this->table->set($key, [self::CACHE_VALUE_COLUMN => $pack_data]);
         } catch (\Throwable $throwable) {
