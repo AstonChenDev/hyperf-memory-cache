@@ -57,7 +57,7 @@ class SwooleTableDriver implements MemoryCacheDriverInterface
             }
             return $this->table->set($key, [self::CACHE_VALUE_COLUMN => $pack_data]);
         } catch (\Throwable $throwable) {
-            $this->container->get(StdoutLoggerInterface::class)->warning($throwable->getMessage());
+            $this->container->get(StdoutLoggerInterface::class)->debug($throwable->getMessage());
             return false;
         }
     }
