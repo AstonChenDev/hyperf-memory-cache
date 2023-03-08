@@ -19,17 +19,24 @@ class SwooleTableDriver implements MemoryCacheDriverInterface
 
     private ContainerInterface $container;
 
+    /**
+     * @var int
+     */
+    private int $value_size;
+
     public function __construct(ContainerInterface $container, array $config)
     {
         $this->container = $container;
         $this->packer = $container->get($config['packer'] ?? PhpSerializerPacker::class);
+        $this->value_size = $config['tables']['cache']['column_value']['size'] ?? 1024;
         $this->table = new Table($config['tables']['cache']['table_size'] ?? 1024);
         $this->table->column(
             self::CACHE_VALUE_COLUMN,
             $config['tables']['cache']['column_value']['type'] ?? Table::TYPE_STRING,
-            $config['tables']['cache']['column_value']['size'] ?? 1024,
+            $this->value_size
         );
         $this->table->create();
+
     }
 
     public function get(string $key): ?string
@@ -44,7 +51,11 @@ class SwooleTableDriver implements MemoryCacheDriverInterface
     public function set(string $key, string $value): bool
     {
         try {
-            return $this->table->set($key, [self::CACHE_VALUE_COLUMN => $this->packer->pack($value)]);
+            $pack_data = $this->packer->pack($value);
+            if (strlen($pack_data) > $this->value_size) {
+                throw new \Exception('Method Swoole\Table::set() value is too long');
+            }
+            return $this->table->set($key, [self::CACHE_VALUE_COLUMN => $pack_data]);
         } catch (\Throwable $throwable) {
             $this->container->get(StdoutLoggerInterface::class)->warning($throwable->getMessage());
             return false;
@@ -113,10 +124,10 @@ class SwooleTableDriver implements MemoryCacheDriverInterface
 
     public function hKeys(string $key): ?array
     {
-       if (is_null($from_cache = $this->hGetAll($key))) {
-           return null;
-       }
-       return array_keys($from_cache);
+        if (is_null($from_cache = $this->hGetAll($key))) {
+            return null;
+        }
+        return array_keys($from_cache);
     }
 
     public function hVals(string $key): ?array
