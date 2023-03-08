@@ -23,7 +23,7 @@ class CacheAspect extends AbstractAspect
     public $classes = [Redis::class];
 
     private const ALLOWED_METHODS = [
-        'get', 'hget', 'hgetall', 'hmget', 'hlen','hexists','hkeys','hvals'
+        'get', 'hget', 'hgetall', 'hmget', 'hlen', 'hexists', 'hkeys', 'hvals'
     ];
 
     private static array $custom_methods = [];
@@ -68,7 +68,9 @@ class CacheAspect extends AbstractAspect
         if (($from_cache = $this->$method(...$arguments)) === null) {
             $this->container->get('miss_counter')->add();
             $this->logger->debug('内存表获取缓存失败， 回源获取: method: ' . $method . '; args: ' . json_encode($arguments));
-            return $proceedingJoinPoint->process();
+            $from_redis = $proceedingJoinPoint->process();
+            $this->storeToCache($method, $from_redis, $arguments);
+            return $from_redis;
         }
         $this->container->get('hit_counter')->add();
         return $from_cache;
@@ -79,6 +81,24 @@ class CacheAspect extends AbstractAspect
         $res = $this->driver->$name(...$arguments);
         $this->logger->debug("调用内存表方法: $name , 参数: => " . json_encode($arguments) . ", 结果 => " . json_encode($res));
         return $res;
+    }
+
+    private function storeToCache(string $method, $from_redis, array $arguments)
+    {
+        if (!$from_redis) {
+            return;
+        }
+        $key = $arguments[0];
+        switch ($method) {
+            case 'get':
+                $this->logger->debug("回源后刷新 string 缓存 key: $key, value: ". json_encode($from_redis));
+                $this->driver->set($key, $from_redis);
+                break;
+            case 'hgetall':
+                $this->logger->debug("回源后刷新 hash 缓存 key: $key, value: ". json_encode($from_redis));
+                $this->driver->set($key, $this->driver->packer()->pack($from_redis));
+                break;
+        }
     }
 
     private function setCustomCommands(array $custom_commands)
