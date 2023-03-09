@@ -26,6 +26,28 @@ class CacheAspect extends AbstractAspect
         'get', 'hget', 'hgetall', 'hmget', 'hlen', 'hexists', 'hkeys', 'hvals'
     ];
 
+    private const WRITE_METHODS = [
+        "set",
+        "incrby",
+        "incr",
+        "append",
+        "rename",
+        "incrbyfloat",
+        "decr",
+        "decrby",
+        "setrange",
+        "setnx",
+        "getset",
+        "mset",
+        "msetnx",
+        "hincrby",
+        "hincrbyfloat",
+        "hdel",
+        "hset",
+        "hmset",
+        "hsetnx",
+    ];
+
     private static array $custom_methods = [];
 
     protected ContainerInterface $container;
@@ -58,6 +80,11 @@ class CacheAspect extends AbstractAspect
         }
         [$method, $arguments] = $proceedingJoinPoint->getArguments();
         $method = Str::lower($method);
+        //如果是写操作，直接删除内存缓存 再交给redis 避免写完再读会有延迟
+        if (in_array($method, self::WRITE_METHODS)) {
+            $this->delFromCache($method, $arguments);
+            return $proceedingJoinPoint->process();
+        }
         if (!in_array($method, self::$custom_methods)) {
             return $proceedingJoinPoint->process();
         }
@@ -91,11 +118,11 @@ class CacheAspect extends AbstractAspect
         $key = $arguments[0];
         switch ($method) {
             case 'get':
-                $this->logger->debug("回源后刷新 string 缓存 key: $key, value: ". json_encode($from_redis));
+                $this->logger->debug("回源后刷新 string 缓存 key: $key, value: " . json_encode($from_redis));
                 $this->driver->set($key, $from_redis);
                 break;
             case 'hgetall':
-                $this->logger->debug("回源后刷新 hash 缓存 key: $key, value: ". json_encode($from_redis));
+                $this->logger->debug("回源后刷新 hash 缓存 key: $key, value: " . json_encode($from_redis));
                 $this->driver->set($key, $this->driver->packer()->pack($from_redis));
                 break;
         }
@@ -112,5 +139,24 @@ class CacheAspect extends AbstractAspect
     private function checkEnable(): bool
     {
         return (bool)$this->config->get('memory_cache.default.tables.cache.enable', true);
+    }
+
+    private function delFromCache(string $method, array $arguments)
+    {
+        switch ($method) {
+            case 'rename':
+                $keys = $arguments;
+                break;
+            case 'mset':
+            case 'msetnx':
+                $keys = array_keys($arguments[0]);
+                break;
+            default:
+                $keys = [$arguments[0]];
+                break;
+        }
+        $this->logger->debug("程序触发redis删除事件, method: $method, key: ". json_encode($keys));
+        $this->logger->debug("删除内存缓存 key: " .  json_encode($keys));
+        $this->driver->del(...$keys);
     }
 }
