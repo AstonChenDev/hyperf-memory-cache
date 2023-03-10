@@ -17,6 +17,8 @@ class SwooleTableDriver implements MemoryCacheDriverInterface
 
     const CACHE_VALUE_COLUMN = 'v';
 
+    const MAX_KEY_LENGTH = 63;
+
     private ContainerInterface $container;
 
     /**
@@ -54,6 +56,9 @@ class SwooleTableDriver implements MemoryCacheDriverInterface
             $pack_data = $this->packer->pack($value);
             if (strlen($pack_data) > $this->value_size) {
                 throw new \Exception("Swoole\Table::set(): failed to set($key) with $value, the value length is too long");
+            }
+            if (strlen($key) > self::MAX_KEY_LENGTH) {
+                throw new \Exception("Swoole\Table::set(): key[$key] is too long");
             }
             return $this->table->set($key, [self::CACHE_VALUE_COLUMN => $pack_data]);
         } catch (\Throwable $throwable) {
