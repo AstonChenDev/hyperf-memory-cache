@@ -27,6 +27,7 @@ class CacheAspect extends AbstractAspect
     ];
 
     private const WRITE_METHODS = [
+        "del",
         "set",
         "incrby",
         "incr",
@@ -37,6 +38,8 @@ class CacheAspect extends AbstractAspect
         "decrby",
         "setrange",
         "setnx",
+        "psetex",
+        "setex",
         "getset",
         "mset",
         "msetnx",
